@@ -1,5 +1,5 @@
 # vector-embedding-api
-Flask server that allows users to generate text embeddings using OpenAI's "text-embedding-ada-002" model or the Sentence Transformers library. Text embeddings are dense vector representations of textual data that capture semantic information, making them useful for various natural language processing tasks.
+Flask API server for generating text embeddings using OpenAI's "text-embedding-ada-002" model or the Sentence Transformers library. 
 
 ## Features 🎯
 * POST endpoint access to text embedding models
