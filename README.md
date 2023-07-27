@@ -66,6 +66,3 @@ curl -X POST -H "Content-Type: application/json" -d '{'text': 'Put your text her
     "status": "success"
 }
 ```
-
-### Error Handling ⚠️
-The server responds with appropriate error messages if there are any issues with the request or generating embeddings.
