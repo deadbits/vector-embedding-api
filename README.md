@@ -2,7 +2,7 @@
 Flask API server for generating text embeddings using [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. SentenceTransformers supports over 500 models via [HuggingFace Hub](https://huggingface.co/sentence-transformers).
 
 ## Features 🎯
-* POST endpoint access to text embedding models
+* POST endpoint to create text embedding models
   * sentence_transformers
   * OpenAI text-embedding-ada-002 
 * Easy setup with configuration file
