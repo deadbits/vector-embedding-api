@@ -1,5 +1,5 @@
 # vector-embedding-api
-Flask API server for generating text embeddings using OpenAI's "text-embedding-ada-002" model or the Sentence Transformers library. 
+Flask API server for generating text embeddings using [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. SentenceTransformers supports over 500 models via [HuggingFace Hub](https://huggingface.co/sentence-transformers).
 
 ## Features 🎯
 * POST endpoint access to text embedding models
@@ -9,11 +9,11 @@ Flask API server for generating text embeddings using OpenAI's "text-embedding-a
 * Simple integration with other applications
 
 ### Installation 💻
-To run this Flask server locally, follow the steps below:
+To run this server locally, follow the steps below:
 
 **Clone the repository:** 📦
 ```bash
-git clone https://github.com/your-username/text-embeddings-server.git
+git clone https://github.com/deadbits/vector-embedding-api.git
 cd text-embeddings-server
 ```
 
@@ -28,18 +28,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-
 ### Usage
-Before running the server, make sure you have obtained an API key from OpenAI to use their "text-embedding-ada-002" model. Additionally, you need to specify the Sentence Transformers model you want to use in the server.conf file.
+Before running the server, make sure you have obtained an API key from OpenAI to use their model. You also need to set the SentenceTransformers model you want to use in the [server.conf](/server.conf) file.
 
 **Modify the server.conf configuration file:** ⚙️
 ```ini
 [main]
 openai_api_key = YOUR_OPENAI_API_KEY
-sent_transformers_model = YOUR_SENTENCE_TRANSFORMERS_MODEL_NAME
+sent_transformers_model = sentence-transformers/all-MiniLM-L6-v2
 ```
 
-**Start the Flask server:** 🚀
+**Start the server:** 🚀
 ```
 python server.py
 ```
@@ -52,17 +51,15 @@ The server provides the following endpoint:
 
 #### POST /submit
 Submit text to be converted to embeddings.
-The default is to use the sentence transformers model.
-Setting the `ada` field to True will use the OpenAI model
-
+The default is to use the SentenceTransformers model.
+Setting the `ada` field to True will use the OpenAI model.
 
 **Example Request:**
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"text": "This is an example text.", "ada": true}' http://127.0.0.1:5000/submit
+curl -X POST -H "Content-Type: application/json" -d '{'text': 'Put your text here', "ada": true}' http://127.0.0.1:5000/submit
 ```
 
 **Example Response:**
-
 ```json
 {
     "embedding": [0.123, 0.456, ..., 0.789],
