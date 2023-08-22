@@ -2,6 +2,7 @@
 # github.com/deadbits/vector-embedding-api
 import os
 import sys
+import argparse
 import logging
 import configparser
 
@@ -12,6 +13,9 @@ from sentence_transformers import SentenceTransformer
 
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -30,13 +34,13 @@ class Config:
 
         try:
             answer = self.config.get(section, key)
-        except:
-            logging.error(f'Config file missing section: {section}')
+        except Exception as err:
+            logging.error(f'Config file missing section: {section} - {err}')
 
         return answer
 
 
-def get_openai_embeddings(text: str):
+def get_openai_embeddings(text: str) -> list:
     try:
         response = openai.Embedding.create(input=text, model='text-embedding-ada-002')
         return response['data'][0]['embedding']
@@ -45,7 +49,7 @@ def get_openai_embeddings(text: str):
         abort(500, 'Failed to get OpenAI embeddings')
 
 
-def get_transformers_embeddings(text: str):
+def get_transformers_embeddings(text: str) -> list:
     try:
         return model.encode(text).tolist()
     except Exception as err:
@@ -56,26 +60,48 @@ def get_transformers_embeddings(text: str):
 @app.route('/submit', methods=['POST'])
 def submit_text():
     data = request.json
-    ada = data.get('ada', False)
     
-    if not 'text' in data:
-        abort(400, 'Text data is required')
+    text_data = data.get('text')
+    model_type = data.get('model', 'local').lower()
 
-    if ada:
-        embedding_data = get_openai_embeddings(data['text'])
+    if text_data is None:
+        abort(400, 'Missing text data to embed')
+    
+    if model_type not in ['local', 'openai']:
+        abort(400, 'model field must be one of: local, openai')
+
+    if model_type == 'openai':
+        embedding_data = get_openai_embeddings(text_data)
     else:
-        embedding_data = get_transformers_embeddings(data['text'])
+        embedding_data = get_transformers_embeddings(text_data)
 
     return jsonify({'embedding': embedding_data, 'status': 'success'})
 
 
 if __name__ == '__main__':
-    conf = Config('server.conf')
-    openai.api_key = conf.get('main', 'openai_api_key')
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '-c', '--config',
+        help='config file',
+        type=str,
+        required=True
+    )
+
+    args = parser.parse_args()
+
+    conf = Config(args.config)
+    api_key = conf.get('main', 'openai_api_key')
     sent_model = conf.get('main', 'sent_transformers_model')
 
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    if api_key is None:
+        logger.warn('No OpenAI API key set in configuration file: server.conf')
+    else:
+        logger.info('Set OpenAI API key via openai.api_key')
+        openai.api_key = api_key
+
+    if sent_model is None:
+        logger.warn('No transformer model set in configuration file: server.conf')
 
     try:
         model = SentenceTransformer(sent_model)

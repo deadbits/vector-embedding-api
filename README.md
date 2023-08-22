@@ -7,6 +7,7 @@ Flask API server for generating text embeddings using [OpenAI's embedding model]
   * OpenAI text-embedding-ada-002 
 * Easy setup with configuration file
 * Simple integration with other applications
+* Python client utility for submitting text
 
 ### Installation 💻
 To run this server locally, follow the steps below:
@@ -47,16 +48,20 @@ The server should now be running on http://127.0.0.1:5000/.
 
 
 ### API Endpoints 🌐
-The server provides the following endpoint:
 
 #### POST /submit
 Submit text to be converted to embeddings.
+The sentence transformers model will be used by default, but you can change the "model" field to "openai" to use `text-embedding-ada-002`.
+
+**POST data:**
+`{"text": 'Put your text here', "model": "local"}`
+`{"text": 'Put your text here', "model": "openai"}`
+
 The default is to use the SentenceTransformers model.
-Setting the `ada` field to True will use the OpenAI model.
 
 **Example Request:**
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{'text': 'Put your text here', "ada": true}' http://127.0.0.1:5000/submit
+curl -X POST -H "Content-Type: application/json" -d '{"text": 'Put your text here', "model": "local"}' http://127.0.0.1:5000/submit
 ```
 
 **Example Response:**
