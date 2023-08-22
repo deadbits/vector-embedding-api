@@ -1,5 +1,6 @@
-import os
-import sys
+#!/usr/bin/env python3
+# github.com/deadbits/vector-embedding-api
+# client.py
 import json
 import argparse
 import requests
@@ -23,7 +24,7 @@ def send_request(text, model_type='local'):
         response.raise_for_status()
         return response.json()
     except requests.RequestException as err:
-        print(f'[error] exception: {err}')
+        print(f'[error] exception sending http request: {err}')
         return None
 
 
