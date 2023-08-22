@@ -55,6 +55,7 @@ The sentence transformers model will be used by default, but you can change the 
 
 **POST data:**
 `{"text": 'Put your text here', "model": "local"}`
+
 `{"text": 'Put your text here', "model": "openai"}`
 
 The default is to use the SentenceTransformers model.
