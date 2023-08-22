@@ -51,7 +51,7 @@ python server.py
 The server should now be running on http://127.0.0.1:5000/.
 
 ### API Endpoints 🌐
-##### Client Usage
+#### Client Usage
 A small [Python client](/client.py) is provided to assist with submitting text strings or text files. 
 
 **Usage**
