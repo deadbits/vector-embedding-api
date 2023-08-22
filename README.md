@@ -1,5 +1,5 @@
 # vector-embedding-api
-`vector-embedding-api`provides a Flask API server and client to generate text embeddings using either [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. The API server also offers an in-memory cache for embeddings and returns results from the cache when available.
+`vector-embedding-api` provides a Flask API server and client to generate text embeddings using either [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. The API server also offers an in-memory cache for embeddings and returns results from the cache when available.
 
 SentenceTransformers supports over 500 models via [HuggingFace Hub](https://huggingface.co/sentence-transformers).
 
