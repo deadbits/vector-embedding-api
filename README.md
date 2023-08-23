@@ -91,7 +91,7 @@ Checks the server's health status.
 {
   "cache": {
     "enabled": true,
-    "max_size": null,
+    "max_size": 500,
     "size": 0
   },
   "models": {
