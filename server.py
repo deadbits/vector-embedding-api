@@ -128,7 +128,7 @@ def health_check():
         "cache": {
             "enabled": embedding_cache is not None,
             "size": len(embedding_cache.cache) if embedding_cache else None,
-            "max_size": None
+            "max_size": embedding_cache.max_size if embedding_cache else None
         }
     }
 
