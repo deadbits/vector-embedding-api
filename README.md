@@ -1,5 +1,5 @@
 # vector-embedding-api
-`vector-embedding-api`provides a Flask API server and client to generate text embeddings using either [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. The API server also offers an in-memory cache for embeddings and returns results from the cache when available.
+`vector-embedding-api`provides a Flask API server and client to generate text embeddings using either [OpenAI's embedding model](https://platform.openai.com/docs/guides/embeddings) or the [SentenceTransformers](https://www.sbert.net/) library. The API server now supports in-memory LRU caching for faster retrievals, batch processing for handling multiple texts at once, and a health status endpoint for monitoring the server status.
 
 SentenceTransformers supports over 500 models via [HuggingFace Hub](https://huggingface.co/sentence-transformers).
 
@@ -7,10 +7,11 @@ SentenceTransformers supports over 500 models via [HuggingFace Hub](https://hugg
 * POST endpoint to create text embeddings
   * sentence_transformers
   * OpenAI text-embedding-ada-002
-* In-memory cache for embeddings
+* In-memory LRU cache for quick retrieval of embeddings
+* Batch processing to handle multiple texts in a single request
 * Easy setup with configuration file
-* Simple integration with other applications
-* Python client utility for submitting text
+* Health status endpoint
+* Python client utility for submitting text or files
 
 ### Installation 💻
 To run this server locally, follow the steps below:
@@ -33,9 +34,8 @@ pip install -r requirements.txt
 ```
 
 ### Usage
-Modify the [server.conf](/server.conf) file to specify a SentenceTransformers model, your OpenAI API key, or both.
 
-**Modify the server.conf configuration file:** ⚙️
+**Modify the [server.conf](/server.conf) configuration file:** ⚙️
 ```ini
 [main]
 openai_api_key = YOUR_OPENAI_API_KEY
@@ -52,7 +52,7 @@ The server should now be running on http://127.0.0.1:5000/.
 
 ### API Endpoints 🌐
 ##### Client Usage
-A small [Python client](/client.py) is provided to assist with submitting text strings or text files. 
+A small [Python client](/client.py) is provided to assist with submitting text strings or files. 
 
 **Usage**
 `python3 client.py -t "Your text here" -m local`
@@ -60,11 +60,11 @@ A small [Python client](/client.py) is provided to assist with submitting text s
 `python3 client.py -f /path/to/yourfile.txt -m openai`
 
 #### POST /submit
-Submits a text string for embedding generation.
+Submits an individual text string or a list of text strings for embedding generation.
 
 **Request Parameters**
 
-* **text:** The text string to generate the embedding for. (Required)
+* **text:** The text string or list of text strings to generate the embedding for. (Required)
 * **model:** Type of model to be used, either local for SentenceTransformer models or openai for OpenAI's model. Default is local.
 
 **Response**
@@ -76,6 +76,31 @@ Submits a text string for embedding generation.
 * **cache:** Boolean indicating if the result was retrieved from cache. (Optional)
 * **message:** Error message if the status is error. (Optional)
 
+#### GET /health
+Checks the server's health status.
+
+**Response**
+
+* **cache.enabled:** Boolean indicating status of the cache
+* **cache.max_size:** Maximum cache size
+* **cache.size:** Current cache size
+* **models.openai:** Boolean indicating if OpenAI embeddings are enabled. (Optional)
+* **models.sentence-transformers:** Name of sentence-transformers model in use.
+
+```json
+{
+  "cache": {
+    "enabled": true,
+    "max_size": null,
+    "size": 0
+  },
+  "models": {
+    "openai": true,
+    "sentence-transformers": "sentence-transformers/all-MiniLM-L6-v2"
+  }
+}
+```
+
 #### Example Usage
 Send a POST request to the /submit endpoint with JSON payload:
 
@@ -84,15 +109,38 @@ Send a POST request to the /submit endpoint with JSON payload:
     "text": "Your text here",
     "model": "local"
 }
+
+// multi text submission
+{
+    "text": ["Text1 goes here", "Text2 goes here"], 
+    "model": "openai"
+}
 ```
 
 You'll receive a response containing the embedding and additional information:
 
 ```json
-{
+[
+  {
     "embedding": [...],
     "status": "success",
-    "elapsed": 293.52,
+    "elapsed": 123,
     "model": "sentence-transformers/all-MiniLM-L6-v2"
-}
+  }
+]
+
+[
+  {
+    "embedding": [...],
+    "status": "success",
+    "elapsed": 123,
+    "model": "openai"
+  }, 
+  {
+    "embedding": [...],
+    "status": "success",
+    "elapsed": 123,
+    "model": "openai"
+  }, 
+]
 ```
