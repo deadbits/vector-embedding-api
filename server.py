@@ -11,7 +11,7 @@ import configparser
 
 import openai
 
-from typing import Dict, Union, Optional
+from typing import Dict, List, Union, Optional
 from collections import OrderedDict
 from flask import Flask, request, jsonify, abort
 from sentence_transformers import SentenceTransformer
@@ -85,16 +85,26 @@ class EmbeddingGenerator:
 
         if openai_key is not None:
             openai.api_key = self.openai_key
-            logger.info('enabled model: text-embedding-ada-002')
+            try:
+                openai.Model.list()
+                logger.info('enabled model: text-embedding-ada-002')
+            except Exception as err:
+                logger.error(f'Failed to connect to OpenAI API; disabling OpenAI model: {err}')
 
-    def generate(self, text: str, model_type: str) -> Dict[str, Union[str, float, list]]:
+    def generate(self, text_batch: List[str], model_type: str) -> Dict[str, Union[str, float, list]]:
         start_time = time.time()
-        result = {'status': 'success'}
+        result = {
+            'status': 'success',
+            'message': '',
+            'model': '',
+            'elapsed': 0,
+            'embeddings': []
+        }
 
         if model_type == 'openai':
             try:
-                response = openai.Embedding.create(input=text, model='text-embedding-ada-002')
-                result['embedding'] = response['data'][0]['embedding']
+                response = openai.Embedding.create(input=text_batch, model='text-embedding-ada-002')
+                result['embeddings'] = [data['embedding'] for data in response['data']]
                 result['model'] = 'text-embedding-ada-002'
             except Exception as err:
                 logger.error(f'Failed to get OpenAI embeddings: {err}')
@@ -103,8 +113,8 @@ class EmbeddingGenerator:
 
         else:
             try:
-                embedding = self.model.encode(text).tolist()
-                result['embedding'] = embedding
+                embedding = self.model.encode(text_batch, batch_size=len(text_batch), device='cuda').tolist()
+                result['embeddings'] = embedding
                 result['model'] = self.sbert_model
             except Exception as err:
                 logger.error(f'Failed to get sentence-transformers embeddings: {err}')
@@ -145,33 +155,18 @@ def submit_text():
     if text_data is None:
         abort(400, 'Missing text data to embed')
 
-    if model_type not in ['local', 'openai']:
-        abort(400, 'model field must be one of: local, openai')
-
-    if isinstance(text_data, str):
-        text_data = [text_data]
-    
     if not all(isinstance(text, str) for text in text_data):
         abort(400, 'all data must be text strings')
 
     results = []
-    for text in text_data:
-        result = None
+    result = embedding_generator.generate(text_data, model_type)
 
-        if embedding_cache:
-            result = embedding_cache.get(text, model_type)
-            if result:
-                logger.info('found embedding in cache!')
-                result = {'embedding': result, 'cache': True, "status": 'success'}
+    if embedding_cache and result['status'] == 'success':
+        for text, embedding in zip(text_data, result['embeddings']):
+            embedding_cache.set(text, model_type, embedding)
+        logger.info('added to cache')
 
-        if result is None:
-            result = embedding_generator.generate(text, model_type)
-
-            if embedding_cache and result['status'] == 'success':
-                embedding_cache.set(text, model_type, result['embedding'])
-                logger.info('added to cache')
-
-        results.append(result)
+    results.append(result)
 
     return jsonify(results)
 
